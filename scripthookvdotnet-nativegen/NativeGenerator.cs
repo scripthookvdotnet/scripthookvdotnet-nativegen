@@ -42,9 +42,7 @@ namespace scripthookvdotnet_nativegen
                     }
                 }
 
-                if (File.Exists("NativeHashes.hpp"))
-                    File.Delete("NativeHashes.hpp");
-                File.AppendAllText("NativeHashes.hpp", string.Format(nativeTemplate, resultBuilder));
+                File.WriteAllText("NativeHashes.hpp", string.Format(nativeTemplate, resultBuilder));
 
                 Console.WriteLine("NativeHashes.hpp created (Press any key to exit)");
                 Console.ReadKey();
