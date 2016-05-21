@@ -34,12 +34,7 @@ namespace scripthookvdotnet_nativegen
                     foreach (string nativeFuncKey in nativeNamespace.Keys)
                     {
                         NativeFunction nativeFunction = nativeNamespace[nativeFuncKey];
-                        if (nativeFunction.Name == "")
-                        {
-                            resultBuilder.AppendLine("			_" + nativeFuncKey + " = " + nativeFuncKey + ", // " +
-                                                     nativeFunction.JHash);
-                        }
-                        else
+                        if (!string.IsNullOrEmpty(nativeFunction.Name))
                         {
                             resultBuilder.AppendLine("			" + nativeFunction.Name + " = " + nativeFuncKey + ", // " +
                                                      nativeFunction.JHash);
