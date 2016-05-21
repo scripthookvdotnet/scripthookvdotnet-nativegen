@@ -25,6 +25,6 @@ namespace GTA
 		public enum class Hash : System::UInt64
 		{{
 {0}
-		}}
-	}};
+		}};
+	}}
 }}
