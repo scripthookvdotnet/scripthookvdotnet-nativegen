@@ -17,7 +17,7 @@ namespace scripthookvdotnet_nativegen
                 wc.Headers.Add("Accept-Encoding: gzip, deflate, sdch");
 
                 string nativeFileRaw = Decompress(wc.DownloadData("http://www.dev-c.com/nativedb/natives.json"));
-                string nativeTemplate = File.ReadAllText("../../nativeTemplate.txt");
+                string nativeTemplate = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "NativeTemplate.txt"));
 
                 NativeFile nativeFile = JsonConvert.DeserializeObject<NativeFile>(nativeFileRaw);
                 StringBuilder resultBuilder = new StringBuilder();
@@ -42,10 +42,11 @@ namespace scripthookvdotnet_nativegen
                     }
                 }
 
-                File.WriteAllText("NativeHashes.hpp", string.Format(nativeTemplate, resultBuilder));
+                string outputFile = args.Length > 0 ? args[0] : "NativeHashes.hpp";
 
-                Console.WriteLine("NativeHashes.hpp created (Press any key to exit)");
-                Console.ReadKey();
+                File.WriteAllText(outputFile, string.Format(nativeTemplate, resultBuilder));
+
+                Console.WriteLine("Finished generating native hash enum");
             }
         }
 
