@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 // ReSharper disable ClassNeverInstantiated.Global
 
-namespace scripthookvdotnet_nativegen
+namespace NativeGen
 {
     public class NativeFile : Dictionary<string, NativeNamespace>
     {
