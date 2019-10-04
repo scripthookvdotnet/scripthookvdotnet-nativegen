@@ -11,12 +11,28 @@ namespace NativeGen
 	{
 		public static void Main(string[] args)
 		{
-			using (WebClient wc = new WebClient())
+			string inputFile = "http://www.dev-c.com/nativedb/natives.json";
+			string outputFile = "NativeHashes.txt";
+			bool withUnnamedHashes = false;
+
+			if (args.Length == 1)
 			{
+				outputFile = args[0];
+			}
+			if (args.Length == 2)
+			{
+				inputFile = args[0];
+				outputFile = args[1];
+			}
+
+			using (var wc = new WebClient())
+			{
+				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
 				Console.WriteLine("Downloading natives.json");
 				wc.Headers.Add("Accept-Encoding: gzip, deflate, sdch");
 
-				string nativeFileRaw = Decompress(wc.DownloadData("http://www.dev-c.com/nativedb/natives.json"));
+				string nativeFileRaw = Decompress(wc.DownloadData(inputFile));
 				string nativeTemplate = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "NativeTemplate.txt"));
 
 				NativeFile nativeFile = JsonConvert.DeserializeObject<NativeFile>(nativeFileRaw);
@@ -39,10 +55,12 @@ namespace NativeGen
 						{
 							resultBuilder.AppendLine("			" + nativeFunction.Name + " = " + nativeFuncKey + ", // " + nativeFunction.JHash);
 						}
+						else if (withUnnamedHashes)
+						{
+							resultBuilder.AppendLine("			_" + nativeFuncKey + " = " + nativeFuncKey + ", // " + nativeFunction.JHash);
+						}
 					}
 				}
-
-				string outputFile = args.Length > 0 ? args[0] : "NativeHashes.hpp";
 
 				File.WriteAllText(outputFile, string.Format(nativeTemplate, resultBuilder));
 
