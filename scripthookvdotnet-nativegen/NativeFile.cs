@@ -4,15 +4,15 @@ using NetJSON;
 
 namespace NativeGen
 {
-    public class NativeFile : Dictionary<string, NativeNamespace>
+    public sealed class NativeFile : Dictionary<string, NativeNamespace>
     {
     }
 
-    public class NativeNamespace : Dictionary<string, NativeFunction>
+	public sealed class NativeNamespace : Dictionary<string, NativeFunction>
     {
     }
 
-    public class NativeFunction
+    public sealed class NativeFunction
     {
         [NetJSONProperty("name")]
         public string Name { get; set; }
@@ -27,7 +27,7 @@ namespace NativeGen
         public string JHash { get; set; }
     }
 
-    public class NativeParams
+    public sealed class NativeParams
     {
         [NetJSONProperty("type")]
         public string Type { get; set; }
