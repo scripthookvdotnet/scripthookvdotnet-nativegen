@@ -11,7 +11,7 @@ namespace NativeGen
 	{
 		public static void Main(string[] args)
 		{
-			string inputFile = "http://www.dev-c.com/nativedb/natives.json";
+			string inputFile = "https://github.com/alloc8or/gta5-nativedb-data/blob/master/natives.json?raw=true";
 			string outputFile = "NativeHashes.txt";
 			bool withUnnamedHashes = false;
 
