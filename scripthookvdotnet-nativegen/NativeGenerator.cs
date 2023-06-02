@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
-using Newtonsoft.Json;
+using NetJSON;
 
 namespace NativeGen
 {
@@ -63,7 +63,7 @@ namespace NativeGen
 				string nativeFileRaw = Decompress(wc.DownloadData(inputJsonUrl));
 				string nativeTemplate = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "NativeTemplate.txt"));
 
-				NativeFile nativeFile = JsonConvert.DeserializeObject<NativeFile>(nativeFileRaw);
+				NativeFile nativeFile = NetJSON.NetJSON.Deserialize<NativeFile>(nativeFileRaw);
 				StringBuilder resultBuilder = new StringBuilder();
 
 				bool outputGuessedNames = options.OutputGuessedNames;

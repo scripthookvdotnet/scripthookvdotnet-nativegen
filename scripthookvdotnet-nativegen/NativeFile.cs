@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using NetJSON;
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace NativeGen
@@ -14,25 +14,25 @@ namespace NativeGen
 
     public class NativeFunction
     {
-        [JsonProperty("name")]
+        [NetJSONProperty("name")]
         public string Name { get; set; }
 
-        [JsonProperty("params")]
+        [NetJSONProperty("params")]
         public List<NativeParams> Params { get; set; }
 
-        [JsonProperty("results")]
+        [NetJSONProperty("results")]
         public string Results { get; set; }
 
-        [JsonProperty("jhash")]
+        [NetJSONProperty("jhash")]
         public string JHash { get; set; }
     }
 
     public class NativeParams
     {
-        [JsonProperty("type")]
+        [NetJSONProperty("type")]
         public string Type { get; set; }
 
-        [JsonProperty("name")]
+        [NetJSONProperty("name")]
         public string Name { get; set; }
     }
 }
