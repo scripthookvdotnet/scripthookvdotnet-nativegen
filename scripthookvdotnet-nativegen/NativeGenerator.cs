@@ -9,21 +9,49 @@ namespace NativeGen
 {
 	public static class Application
 	{
+		public sealed class Options
+		{
+			public bool OutputGuessedNames { get; set; }
+			public bool AppendJoaatHash { get; set; }
+		}
+
+		public static Options ConfigureOptions(string[] optionArgs)
+		{
+			Options result = new Options();
+			foreach (string arg in optionArgs)
+			{
+				if (arg == "-g" || arg == "--output-guessed-names")
+				{
+					result.OutputGuessedNames = true;
+				}
+				if (arg == "-j" || arg == "--append-joaat-hash")
+				{
+					result.AppendJoaatHash = true;
+				}
+			}
+
+			return result;
+		}
+
 		public static void Main(string[] args)
 		{
-			string inputFile = "https://github.com/alloc8or/gta5-nativedb-data/blob/master/natives.json?raw=true";
+			string inputJsonUrl = "https://github.com/alloc8or/gta5-nativedb-data/blob/master/natives.json?raw=true";
 			string outputFile = "NativeHashes.txt";
-			bool withUnnamedHashes = false;
 
-			if (args.Length == 1)
+			int argsLength = args.Length;
+			if (argsLength == 1)
 			{
 				outputFile = args[0];
 			}
-			if (args.Length == 2)
+			if (argsLength >= 2)
 			{
-				inputFile = args[0];
+				inputJsonUrl = args[0];
 				outputFile = args[1];
 			}
+
+			Options options = (argsLength >= 3)
+				? ConfigureOptions(args.SubArray(2, argsLength - 2))
+				: new Options();
 
 			using (var wc = new WebClient())
 			{
@@ -32,32 +60,45 @@ namespace NativeGen
 				Console.WriteLine("Downloading natives.json");
 				wc.Headers.Add("Accept-Encoding: gzip, deflate, sdch");
 
-				string nativeFileRaw = Decompress(wc.DownloadData(inputFile));
+				string nativeFileRaw = Decompress(wc.DownloadData(inputJsonUrl));
 				string nativeTemplate = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "NativeTemplate.txt"));
 
 				NativeFile nativeFile = JsonConvert.DeserializeObject<NativeFile>(nativeFileRaw);
 				StringBuilder resultBuilder = new StringBuilder();
 
+				bool outputGuessedNames = options.OutputGuessedNames;
+				bool appendJoaatHash = options.AppendJoaatHash;
 				foreach (string nativeNamespaceKey in nativeFile.Keys)
 				{
 					Console.WriteLine("Processing " + nativeNamespaceKey);
 					NativeNamespace nativeNamespace = nativeFile[nativeNamespaceKey];
 
-					resultBuilder.AppendLine("			/*");
-					resultBuilder.AppendLine("				" + nativeNamespaceKey);
-					resultBuilder.AppendLine("			*/");
+					resultBuilder.AppendLine("\t\t\t/*");
+					resultBuilder.AppendLine("\t\t\t\t" + nativeNamespaceKey);
+					resultBuilder.AppendLine("\t\t\t*/");
 
 					foreach (string nativeFuncKey in nativeNamespace.Keys)
 					{
 						NativeFunction nativeFunction = nativeNamespace[nativeFuncKey];
 
-						if (!string.IsNullOrEmpty(nativeFunction.Name))
+						string nativeFunctionName = nativeFunction.Name;
+						if (string.IsNullOrEmpty(nativeFunctionName))
 						{
-							resultBuilder.AppendLine("			" + nativeFunction.Name + " = " + nativeFuncKey + ", // " + nativeFunction.JHash);
+							continue;
 						}
-						else if (withUnnamedHashes)
+						if (!outputGuessedNames && nativeFunctionName.StartsWith("_", StringComparison.Ordinal))
 						{
-							resultBuilder.AppendLine("			_" + nativeFuncKey + " = " + nativeFuncKey + ", // " + nativeFunction.JHash);
+							continue;
+						}
+
+						if (appendJoaatHash)
+						{
+							string substringForJoaatHashComment = !string.IsNullOrEmpty(nativeFunction.JHash) ? $" // {nativeFunction.JHash}" : string.Empty;
+							resultBuilder.AppendLine($"\t\t\t{nativeFunctionName} = {nativeFuncKey},{substringForJoaatHashComment}");
+						}
+						else
+						{
+							resultBuilder.AppendLine($"\t\t\t{nativeFunctionName} = {nativeFuncKey},");
 						}
 					}
 				}
@@ -97,6 +138,16 @@ namespace NativeGen
 					return Encoding.UTF8.GetString(memory.ToArray());
 				}
 			}
+		}
+	}
+
+	public static class ArrayExtensions
+	{
+		public static T[] SubArray<T>(this T[] data, int index, int length)
+		{
+			T[] result = new T[length];
+			Array.Copy(data, index, result, 0, length);
+			return result;
 		}
 	}
 }
