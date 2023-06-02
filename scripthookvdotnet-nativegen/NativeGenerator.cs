@@ -9,10 +9,11 @@ namespace NativeGen
 {
 	public static class Application
 	{
-		public sealed class Options
+		public struct Options
 		{
-			public bool OutputGuessedNames { get; set; }
-			public bool AppendJoaatHash { get; set; }
+			public bool OutputGuessedNames;
+			public bool AppendJoaatHash;
+			public bool Verbose;
 		}
 
 		public static Options ConfigureOptions(string[] optionArgs)
@@ -27,6 +28,10 @@ namespace NativeGen
 				if (arg == "-j" || arg == "--append-joaat-hash")
 				{
 					result.AppendJoaatHash = true;
+				}
+				if (arg == "-v" || arg == "--verbose")
+				{
+					result.Verbose = true;
 				}
 			}
 
@@ -57,7 +62,7 @@ namespace NativeGen
 			{
 				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
-				Console.WriteLine("Downloading natives.json");
+				LogToConsoleIfVerbose("Downloading natives.json", options.Verbose);
 				wc.Headers.Add("Accept-Encoding: gzip, deflate, sdch");
 
 				string nativeFileRaw = Decompress(wc.DownloadData(inputJsonUrl));
@@ -66,11 +71,9 @@ namespace NativeGen
 				NativeFile nativeFile = NetJSON.NetJSON.Deserialize<NativeFile>(nativeFileRaw);
 				StringBuilder resultBuilder = new StringBuilder();
 
-				bool outputGuessedNames = options.OutputGuessedNames;
-				bool appendJoaatHash = options.AppendJoaatHash;
 				foreach (string nativeNamespaceKey in nativeFile.Keys)
 				{
-					Console.WriteLine("Processing " + nativeNamespaceKey);
+					LogToConsoleIfVerbose($"Processing {nativeNamespaceKey}", options.Verbose);
 					NativeNamespace nativeNamespace = nativeFile[nativeNamespaceKey];
 
 					resultBuilder.AppendLine("\t\t\t/*");
@@ -86,12 +89,12 @@ namespace NativeGen
 						{
 							continue;
 						}
-						if (!outputGuessedNames && nativeFunctionName.StartsWith("_", StringComparison.Ordinal))
+						if (!options.OutputGuessedNames && nativeFunctionName.StartsWith("_", StringComparison.Ordinal))
 						{
 							continue;
 						}
 
-						if (appendJoaatHash)
+						if (options.AppendJoaatHash)
 						{
 							string substringForJoaatHashComment = !string.IsNullOrEmpty(nativeFunction.JHash) ? $" // {nativeFunction.JHash}" : string.Empty;
 							resultBuilder.AppendLine($"\t\t\t{nativeFunctionName} = {nativeFuncKey},{substringForJoaatHashComment}");
@@ -105,7 +108,15 @@ namespace NativeGen
 
 				File.WriteAllText(outputFile, string.Format(nativeTemplate, resultBuilder));
 
-				Console.WriteLine("Finished generating native hash enum");
+				LogToConsoleIfVerbose("Finished generating native hash enum", options.Verbose);
+			}
+		}
+
+		public static void LogToConsoleIfVerbose(string input, bool log = false)
+		{
+			if (log)
+			{
+				Console.WriteLine(input);
 			}
 		}
 
